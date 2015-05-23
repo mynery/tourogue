@@ -1,0 +1,9 @@
+[package]
+name = "tourogue"
+version = "0.1.0"
+authors = ["myname <myname@mynery.eu>"]
+
+[dependencies]
+termbox = "*"
+noise = "*"
+rand = "*"
