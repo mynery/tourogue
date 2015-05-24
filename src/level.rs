@@ -32,10 +32,26 @@ impl Level {
 		self.filled_rect((x1, y1 + 1), (x1, y2 - 1), object);
 		self.filled_rect((x2, y1 + 1), (x2, y2 - 1), object);
 	}
+	pub fn shop(id: i32) -> Level {
+		match id {
+			-1 => { Level { ..Default::default() } }
+			_ => { panic!("shop with unknown id") }
+		}
+	}
+	fn building(&mut self, start: (i32, i32), end: (i32, i32), id: i32) {
+		self.filled_rect(start, end, Item::wall);
+		self.items.insert(((start.0 + end.0)/2, end.1), Item::door_to(id));
+	}
 	pub fn surface() -> Level {
 		let mut level = Level { upstairs: (5, 5), downstairs: (1, 1), ..Default::default() };
 		level.empty_rect((0, 0), (80, 24), Item::wall);
-		level.items.insert((20, 20), Item::fountain());
+		level.filled_rect((1, 11), (79, 13), Item::street);
+		level.filled_rect((39, 1), (41, 23), Item::street);
+		level.filled_rect((38, 9), (42, 15), Item::street);
+		level.filled_rect((37, 10), (43, 14), Item::street);
+		level.filled_rect((40, 11), (40, 13), Item::fountain);
+		level.filled_rect((39, 12), (41, 12), Item::fountain);
+		level.building((44, 9), (46, 10), -2);
 		level
 	}
 	pub fn new(depth: i32, upstairs: (i32, i32), seed: &Seed) -> Level {
@@ -142,10 +158,9 @@ impl Level {
 	fn join_rooms(&mut self, roomcount: i32, pathes: &mut HashMap<(i32, i32), Vec<(i32, i32)>>) {
 		let mut roomids = (0..roomcount).collect::<HashSet<i32>>();
 		while roomids.len() > 1 {
-			let mut min = -1;
+			let mut min = ::std::usize::MAX;
 			for path in pathes.values() {
 				if min > path.len() { min = path.len(); }
-				if min < 0 { min = path.len(); }
 			}
 			let (mut sid1, mut sid2) = (0, 0);
 			for (&(id1, id2), path) in pathes.iter() {
