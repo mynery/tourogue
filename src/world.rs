@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct World {
+	width: i32, height: i32,
 	seed: Option<Seed>,
 	levels: HashMap<i32, Level>,
 	characters: HashMap<(i32, i32), Character>,
@@ -22,9 +23,10 @@ pub struct World {
 }
 
 impl World {
-	pub fn new() -> World {
-		let level = Level::surface();
+	pub fn new(width: i32, height: i32) -> World {
+		let level = Level::surface(width, height);
 		let mut world = World { position: level.start_pos(), ..Default::default() };
+		world.width = width; world.height = height;
 		world.seed = Some(Seed::new(12));
 		world.levels.insert(0, level);
 		world
@@ -87,7 +89,7 @@ impl World {
 		if stairs != self.position { return false; }
 		self.level = self.level + 1;
 		if !self.levels.contains_key(&self.level) {
-			self.levels.insert(self.level, Level::new(self.level, stairs, &self.seed.as_ref().unwrap()));
+			self.levels.insert(self.level, Level::new(self.level, self.width, self.height, stairs, &self.seed.as_ref().unwrap()));
 		}
 		true
 	}

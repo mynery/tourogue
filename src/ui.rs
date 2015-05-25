@@ -9,13 +9,14 @@ use self::termbox::{
 	Cell,
 	BLACK,
 	WHITE,
+	GREEN,
 	BOLD,
 };
 
 pub fn run(world: &mut World) {
-	// Open the terminal
 	let mut tb = Termbox::open().unwrap();
 	draw_level(&mut tb, &world);
+	draw_inventory(&mut tb, &world);
 	loop {
 		match tb.poll_event() {
 			Event::Key(event) => {
@@ -39,7 +40,6 @@ pub fn run(world: &mut World) {
 }
 
 fn draw_level(tb: &mut Termbox, world: &World) {
-	// Clear the screen to black
 	tb.set_clear_attributes(BLACK, BLACK);
 	tb.clear();
 	let (x, y) = world.get_level().end_pos();
@@ -59,6 +59,26 @@ fn draw_level(tb: &mut Termbox, world: &World) {
 		let (x, y) = *position;
 		tb.put_cell(x, y, Cell { ch: item.get_symbol() as u32,
 	                           fg: item.get_color(), bg: BLACK });
+	}
+	tb.present();
+}
+
+fn draw_inventory(tb: &mut Termbox, world: &World) {
+	let border = '#' as u32;
+	for x in 66..81 {
+		tb.put_cell(x, 0, Cell { ch: border, fg: WHITE, bg: BLACK});
+		tb.put_cell(x, 24, Cell { ch: border, fg: WHITE, bg: BLACK});
+	}
+	for y in 1..24 {
+		tb.put_cell(80, y, Cell { ch: border, fg: WHITE, bg: BLACK});
+	}
+	for (pos, inventoryslot) in world.get_player().get_inventory().iter().enumerate() {
+		let item = inventoryslot.get_item();
+		tb.put_cell(66, pos as i32 + 1, Cell { ch: 'a' as u32 + pos as u32, fg: GREEN, bg: BLACK });
+		tb.put_cell(67, pos as i32 + 1, Cell { ch: ')' as u32, fg: GREEN, bg: BLACK });
+		tb.put_cell(70, pos as i32 + 1, Cell { ch: item.get_symbol() as u32, fg: item.get_color(), bg: BLACK });
+		tb.put_str(68, pos as i32 + 1, &format!("{:2}", inventoryslot.get_count()), WHITE, BLACK);
+		tb.put_str(71, pos as i32 + 1, &inventoryslot.get_title(), WHITE, BLACK);
 	}
 	tb.present();
 }

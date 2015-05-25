@@ -42,25 +42,25 @@ impl Level {
 		self.filled_rect(start, end, Item::wall);
 		self.items.insert(((start.0 + end.0)/2, end.1), Item::door_to(id));
 	}
-	pub fn surface() -> Level {
+	pub fn surface(width: i32, height: i32) -> Level {
 		let mut level = Level { upstairs: (5, 5), downstairs: (1, 1), ..Default::default() };
-		level.empty_rect((0, 0), (80, 24), Item::wall);
-		level.filled_rect((1, 11), (79, 13), Item::street);
-		level.filled_rect((39, 1), (41, 23), Item::street);
-		level.filled_rect((38, 9), (42, 15), Item::street);
-		level.filled_rect((37, 10), (43, 14), Item::street);
-		level.filled_rect((40, 11), (40, 13), Item::fountain);
-		level.filled_rect((39, 12), (41, 12), Item::fountain);
-		level.building((44, 9), (46, 10), -2);
+		level.empty_rect((0, 0), (width, height), Item::wall);
+		level.filled_rect((1, height / 2 - 1), (width - 1, height / 2 + 1), Item::street);
+		level.filled_rect((width / 2 - 1, 1), (width / 2 + 1, height - 1), Item::street);
+		level.filled_rect((width / 2 - 2, height / 2 - 3), (width / 2 + 2, height / 2 + 3), Item::street);
+		level.filled_rect((width / 2 - 3, height / 2 - 2), (width / 2 + 3, height / 2 + 2), Item::street);
+		level.filled_rect((width / 2, height / 2 - 1), (width / 2, height / 2 + 1), Item::fountain);
+		level.filled_rect((width / 2 - 1, height / 2), (width / 2 + 1, height / 2), Item::fountain);
+		level.building((width / 2 + 4, height / 2 - 3), (width / 2 + 6, height / 2 - 2), -2);
 		level
 	}
-	pub fn new(depth: i32, upstairs: (i32, i32), seed: &Seed) -> Level {
+	pub fn new(depth: i32, width: i32, height: i32, upstairs: (i32, i32), seed: &Seed) -> Level {
 		let mut level = Level { upstairs: upstairs, ..Default::default() };
 		let mut floors = HashMap::new();
-		level.empty_rect((0, 0), (80, 24), Item::wall);
+		level.empty_rect((0, 0), (width, height), Item::wall);
 		let noise = Brownian2::new(noise::perlin2, 4).wavelength(4.0);
-		for x in 1..80 {
-			for y in 1..24 {
+		for x in 1..width {
+			for y in 1..height {
 				if noise.apply(seed, &[x as f32, y as f32]) > 0.1 && (x, y) != upstairs {
 					level.items.insert((x, y), Item::wall());
 				} else {
@@ -69,15 +69,15 @@ impl Level {
 			}
 		}
 		let mut rooms = Vec::new();
-		level.find_rooms(&mut floors, &mut rooms);
-		level.place_downstairs(&rooms, upstairs.0 < 40);
+		level.find_rooms(&mut floors, &mut rooms, width, height);
+		level.place_downstairs(&rooms, upstairs.0 < width / 2);
 		let mut pathes = HashMap::new();
 		level.calc_distances(&rooms, &mut pathes);
 		level.join_rooms(rooms.len() as i32, &mut pathes);
 		level
 	}
-	fn find_rooms(&mut self, floors: &mut HashMap<(i32, i32), (i32, i32)>, rooms: &mut Vec<Vec<(i32, i32)>>) {
-		let mut current_room = Level::find_unprocessed_room(floors);
+	fn find_rooms(&mut self, floors: &mut HashMap<(i32, i32), (i32, i32)>, rooms: &mut Vec<Vec<(i32, i32)>>, width: i32, height: i32) {
+		let mut current_room = Level::find_unprocessed_room(floors, width, height);
 		while current_room != (0, 0) {
 			floors.insert(current_room, current_room);
 			let mut cells = Vec::new();
@@ -86,7 +86,7 @@ impl Level {
 			if cells.len() > 9 {
 				rooms.push(cells);
 			}
-			current_room = Level::find_unprocessed_room(floors);
+			current_room = Level::find_unprocessed_room(floors, width, height);
 		}
 		if *floors.get(&self.upstairs).unwrap_or(&(0, 0)) == (0, 0) {
 			floors.insert(self.upstairs, self.upstairs);
@@ -107,9 +107,9 @@ impl Level {
 			}
 		}
 	}
-	fn find_unprocessed_room(floors: &HashMap<(i32, i32), (i32, i32)>) -> (i32, i32) {
-		for x in 1..80 {
-			for y in 1..24 {
+	fn find_unprocessed_room(floors: &HashMap<(i32, i32), (i32, i32)>, width: i32, height: i32) -> (i32, i32) {
+		for x in 1..width {
+			for y in 1..height {
 				if *floors.get(&(x, y)).unwrap_or(&(x, y)) == (0, 0) { return (x, y); }
 			}
 		}
