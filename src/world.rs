@@ -1,7 +1,7 @@
 extern crate noise;
 use self::noise::Seed;
 
-use character::Character;
+use character::{Character, InventorySlot};
 use character::CharacterType::*;
 use level::Level;
 use item::Item;
@@ -47,6 +47,7 @@ impl World {
 		}
 	}
 	pub fn get_level<'a>(&'a self) -> &'a Level { self.levels.get(&self.level).unwrap() }
+	fn get_mut_level<'a>(&'a mut self) -> &'a mut Level { self.levels.get_mut(&self.level).unwrap() }
 	pub fn get_chars<'a>(&'a self) -> ::std::iter::Chain<::std::collections::hash_map::Iter<'a, (i32, i32), Character>, ::std::option::IntoIter<(&(i32, i32), &'a Character)>> {
 		self.characters.iter().chain(Some((&self.position, self.get_player())).into_iter())
 	}
@@ -97,5 +98,14 @@ impl World {
 		if self.level == 0 { return false; }
 		self.level = self.level - 1;
 		true
+	}
+	pub fn pickup(&mut self) {
+		let position = self.position.clone();
+		match self.get_mut_level().take_item(position) {
+			Some((item, count)) => {
+				let ref mut player = self.player.as_mut().unwrap();
+				player.add_item(InventorySlot::new(item, count))
+			}, _ => { () }
+		}
 	}
 }

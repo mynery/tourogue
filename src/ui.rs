@@ -30,6 +30,7 @@ pub fn run(world: &mut World) {
 					}
 					Some('>') => { if world.descend() { draw_level(&mut tb, &world); } }
 					Some('<') => { if world.ascend() { draw_level(&mut tb, &world); } }
+					Some(',') => { world.pickup(); draw_inventory(&mut tb, &world); }
 					Some('q') => { break; }
 					_ => {}
 				}
@@ -72,13 +73,21 @@ fn draw_inventory(tb: &mut Termbox, world: &World) {
 	for y in 1..24 {
 		tb.put_cell(80, y, Cell { ch: border, fg: WHITE, bg: BLACK});
 	}
-	for (pos, inventoryslot) in world.get_player().get_inventory().iter().enumerate() {
-		let item = inventoryslot.get_item();
-		tb.put_cell(66, pos as i32 + 1, Cell { ch: 'a' as u32 + pos as u32, fg: GREEN, bg: BLACK });
-		tb.put_cell(67, pos as i32 + 1, Cell { ch: ')' as u32, fg: GREEN, bg: BLACK });
-		tb.put_cell(70, pos as i32 + 1, Cell { ch: item.get_symbol() as u32, fg: item.get_color(), bg: BLACK });
-		tb.put_str(68, pos as i32 + 1, &format!("{:2}", inventoryslot.get_count()), WHITE, BLACK);
-		tb.put_str(71, pos as i32 + 1, &inventoryslot.get_title(), WHITE, BLACK);
+	let mut pos = 1;
+	let mut charpos = 0;
+	for (class, slots) in world.get_player().get_inventory().iter() {
+		tb.put_str(66, pos, class, WHITE | BOLD, BLACK);
+		pos = pos + 1;
+		for inventoryslot in slots {
+			let item = inventoryslot.get_item();
+			tb.put_cell(66, pos, Cell { ch: 'a' as u32 + charpos, fg: GREEN, bg: BLACK });
+			tb.put_cell(67, pos, Cell { ch: ')' as u32, fg: GREEN, bg: BLACK });
+			tb.put_cell(70, pos, Cell { ch: item.get_symbol() as u32, fg: item.get_color(), bg: BLACK });
+			tb.put_str(68, pos, &format!("{:2}", inventoryslot.get_count()), WHITE, BLACK);
+			tb.put_str(71, pos, &inventoryslot.get_title(), WHITE, BLACK);
+			charpos = charpos + 1;
+			pos = pos + 1;
+		}
 	}
 	tb.present();
 }

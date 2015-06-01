@@ -11,6 +11,7 @@ use self::termbox::{
 pub struct Item {
 	class: ItemClass,
 	symbol: char,
+	weight: i32,
 	passable: bool,
 	color: self::termbox::Attribute,
 }
@@ -23,12 +24,22 @@ pub enum ItemClass { Wall, Fountain, Street, Door(i32),
                      Potion(Effect)
                    }
 
+impl ToString for ItemClass {
+	fn to_string(&self) -> String {
+		match *self {
+			ItemClass::Wall => "Wall", ItemClass::Fountain => "Fountain",
+			ItemClass::Street => "Street",
+			ItemClass::Door(_) => "Door", ItemClass::Potion(_) => "Potion"
+		}.to_string()
+	}
+}
+
 impl Item {
-	pub fn wall() -> Item { Item { class: ItemClass::Wall, symbol: '#', passable: false, color: WHITE } }
-	pub fn fountain() -> Item { Item { class: ItemClass::Fountain, symbol: '~', passable: false, color: BLUE | BOLD } }
-	pub fn street() -> Item { Item { class: ItemClass::Street, symbol: '.', passable: true, color: WHITE } }
-	pub fn door_to(level: i32) -> Item { Item { class: ItemClass::Door(level), symbol: '+', passable: true, color: MAGENTA } }
-	pub fn potion(effect: Effect, color: self::termbox::Attribute) -> Item { Item { class: ItemClass::Potion(effect), symbol: '!', passable: true, color: color } }
+	pub fn wall() -> Item { Item { class: ItemClass::Wall, symbol: '#', weight: 0, passable: false, color: WHITE } }
+	pub fn fountain() -> Item { Item { class: ItemClass::Fountain, symbol: '~', weight: 0, passable: false, color: BLUE | BOLD } }
+	pub fn street() -> Item { Item { class: ItemClass::Street, symbol: '.', weight: ::std::i32::MAX, passable: true, color: WHITE } }
+	pub fn door_to(level: i32) -> Item { Item { class: ItemClass::Door(level), symbol: '+', weight: ::std::i32::MAX, passable: true, color: MAGENTA } }
+	pub fn potion(effect: Effect, color: self::termbox::Attribute) -> Item { Item { class: ItemClass::Potion(effect), symbol: '!', weight: 1, passable: true, color: color } }
 	pub fn get_symbol(&self) -> char { self.symbol }
 	pub fn is_passable(&self) -> bool { self.passable }
 	pub fn get_color(&self) -> u16 { self.color }

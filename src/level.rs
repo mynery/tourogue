@@ -3,6 +3,12 @@ use self::noise::{Brownian2, Seed};
 extern crate rand;
 use self::rand::Rng;
 
+extern crate termbox;
+use self::termbox::{
+	GREEN,
+};
+use item::Effect::*;
+
 use item::Item;
 
 use std::collections::{HashMap, HashSet};
@@ -44,6 +50,8 @@ impl Level {
 	}
 	pub fn surface(width: i32, height: i32) -> Level {
 		let mut level = Level { upstairs: (5, 5), downstairs: (1, 1), ..Default::default() };
+		level.items.insert((10, 10), Item::potion(Healing, GREEN));
+		level.items.insert((9, 9), Item::potion(Healing, GREEN));
 		level.empty_rect((0, 0), (width, height), Item::wall);
 		level.filled_rect((1, height / 2 - 1), (width - 1, height / 2 + 1), Item::street);
 		level.filled_rect((width / 2 - 1, 1), (width / 2 + 1, height - 1), Item::street);
@@ -191,5 +199,8 @@ impl Level {
 	pub fn end_pos<'a>(&'a self) -> (i32, i32) { self.downstairs }
 	pub fn get_items<'a>(&'a self) -> ::std::collections::hash_map::Iter<'a, (i32, i32), Item> {
 		self.items.iter()
+	}
+	pub fn take_item(&mut self, position: (i32, i32)) -> Option<(Item, i32)> {
+		self.items.remove(&position).map(|x| (x, 1))
 	}
 }
